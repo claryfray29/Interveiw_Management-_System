@@ -11,16 +11,18 @@ The candidate must ba able to create a new account if there does not exist an ac
 If already existing they should be able to log into their own acconts.
 Once logged in they should be able to see job vacancies available. 
 And they must be able to apply for some vacancy if they haven't applied yet.
-They should also be able to see the status of the jobs they've already aplied to.
-If for some job the status says that thay have an interview upcoming, then they should be able to see the time of interview(or if not scheduled then unscheduled)
-If unscheduled they must able able to schedule an interview from the available slots.
+They should also be able to see the status of the jobs they've already applied to.
+
+###If for some job the status says that thay have an interview upcoming, then they should be able to see the time of interview(or if not scheduled then unscheduled)
+###If unscheduled they must able able to schedule an interview from the available slots.
 
 Interviewer:
 Must be able to login only ( cannot create new account, the company admin will add their mail ids to the db).
 They must be able to see upcoming interviews.
-Also they should be able to see interview requests avalable to choose one which suits best for them.
 After an interview is completed, they should return feedback about the candidate they've taken the interview of and change the status of interview to completed.
 If the candidate did not appear for intervew, they can change the status to missed. Due to which the candidate must directly be rejected.
+
+###Also they should be able to see interview requests avalable to choose one which suits best for them.
 
 Company Admin:
 Open and close vacancies
