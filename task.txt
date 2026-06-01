@@ -17,7 +17,7 @@ They should also be able to see the status of the jobs they've already applied t
 ###If unscheduled they must able able to schedule an interview from the available slots.
 
 Interviewer:
-Must be able to login only ( cannot create new account, the company admin will add their mail ids to the db).
+Must be able to login only (cannot create new account, the company admin will add their mail ids to the db).
 They must be able to see upcoming interviews.
 After an interview is completed, they should return feedback about the candidate they've taken the interview of and change the status of interview to completed.
 If the candidate did not appear for intervew, they can change the status to missed. Due to which the candidate must directly be rejected.

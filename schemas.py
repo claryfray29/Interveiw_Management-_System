@@ -1,4 +1,11 @@
 from pydantic import BaseModel
+from datetime import datetime
+
+#login for all users
+class Login(BaseModel):
+    email: str
+    password: str
+    role: str
 
 #global admin
 class GlobalAdminBase(BaseModel):
@@ -35,7 +42,6 @@ class CompanyAdminBase(BaseModel):
     name: str
     email: str
     password: str
-    company_id: int
 
 class CompanyAdminCreate(CompanyAdminBase):
     pass
@@ -52,7 +58,6 @@ class InterviewerBase(BaseModel):
     name: str
     email: str
     password: str
-    company_id: int
 
 class InterviewerCreate(InterviewerBase):
     pass
@@ -85,13 +90,13 @@ class JobBase(BaseModel):
     title: str
     description: str
     company_id: int
+    vacancies: int
 
 class JobCreate(JobBase):
     pass
 
 class Job(JobBase):
     id: int
-    vacancies: int
 
     class Config:
         from_attributes = True
@@ -102,6 +107,8 @@ class ApplicationBase(BaseModel):
     candidate_id: int
     job_id: int
     company_id: int
+    resume: str
+    status: str = "applied"
     
 class ApplicationCreate(ApplicationBase):
     pass
@@ -117,7 +124,10 @@ class Application(ApplicationBase):
 class InterviewBase(BaseModel):
     application_id: int
     interviewer_id: int
-    scheduled_time: str
+    scheduled_time: datetime
+    candidate_id: int
+    feedback: str = None
+    status: str = "scheduled"
 
 class InterviewCreate(InterviewBase):
     pass

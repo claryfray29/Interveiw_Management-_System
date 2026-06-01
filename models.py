@@ -54,6 +54,7 @@ class Candidate(Base):
     password = Column(String(255), nullable=False)
 
     applications = relationship("Application", back_populates="candidate")
+    interviews = relationship("Interview", back_populates="candidate")
 
 class Job(Base):
     __tablename__ = "jobs"
@@ -65,6 +66,7 @@ class Job(Base):
     vacancies = Column(Integer, nullable=False, default=0)
 
     company = relationship("Company", back_populates="jobs")
+    applications = relationship("Application", back_populates="job")
 
 class Application(Base):
     __tablename__ = "applications"
@@ -72,12 +74,15 @@ class Application(Base):
     id = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
     job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    resume = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False, default="applied")
     #applied_at = Column(DateTime, nullable=False)
 
     candidate = relationship("Candidate", back_populates="applications")
     job = relationship("Job", back_populates="applications")
-    interview = relationship("Interview", back_populates="application")
+    company = relationship("Company", back_populates="applications")
+    interviews = relationship("Interview", back_populates="application")
 
 class Interview(Base):
     __tablename__ = "interviews"
@@ -85,7 +90,13 @@ class Interview(Base):
     id = Column(Integer, primary_key=True, index=True)
     application_id = Column(Integer, ForeignKey("applications.id"), nullable=False)
     interviewer_id = Column(Integer, ForeignKey("interviewers.id"), nullable=False)
-    scheduled_at = Column(DateTime, nullable=False)
+    candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    scheduled_time = Column(DateTime, nullable=False)
+    status = Column(String(50), nullable=False, default="scheduled")
+    feedback = Column(String(255))
 
     application = relationship("Application", back_populates="interviews")
     interviewer = relationship("Interviewer", back_populates="interviews")
+    candidate = relationship("Candidate", back_populates="interviews")
+    company = relationship("Company", back_populates="interviews")
