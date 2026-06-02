@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import SessionLocal
 
-SECRET_KEY = os.getenv("KEY")
+SECRET_KEY = os.getenv("KEY") or os.getenv("FALLBACK_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -25,6 +25,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+    role: str | None = None
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
@@ -79,6 +80,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = get_user(db, role=token_data.role, email=token_data.email)
     if user is None:
         raise credentials_exception
+
+    user.system_role = token_data.role
     return user
 
 async def login_for_access_token(data: schemas.Login, db: Session = Depends(SessionLocal)):
@@ -90,5 +93,5 @@ async def login_for_access_token(data: schemas.Login, db: Session = Depends(Sess
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.email, "role": form_data.role}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": user.email, "role": data.role}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}

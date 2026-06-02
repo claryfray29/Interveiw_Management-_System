@@ -87,7 +87,7 @@ def create_candidate(db: Session, candidate: schemas.CandidateCreate):
     db.add(db_candidate)
     db.commit()
     db.refresh(db_candidate)
-    return {"detail": "Candidate created successfully", "candidate": db_candidate}
+    return db_candidate
 
 #for checking login credentials of candidate
 def get_candidate(db: Session, candidate_id: int):
@@ -154,10 +154,11 @@ def view_upcoming_interviews(db: Session, interviewer_id: int):
 #return feedback for a specific interview
 def interview_feedback(db: Session, interview_id: int):
     interview = db.query(models.Interview).filter(models.Interview.id == interview_id).first()
-    interview.status = "completed"
-    db.commit()
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
+    interview.status = "completed"
+    db.commit()
+    
     return {"candidate_name": interview.application.candidate.name, "job_title": interview.application.job.title, "feedback": interview.feedback, "status": interview.status}
 
 #company admin rejecting all the missed interviews of a specific company

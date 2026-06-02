@@ -21,6 +21,7 @@ class Company(Base):
     interviewers = relationship("Interviewer", back_populates="company")
     jobs = relationship("Job", back_populates="company")
     applications = relationship("Application", back_populates="company")
+    interviews = relationship("Interview", back_populates="company")
 
 class CompanyAdmin(Base):
     __tablename__ = "company_admins"
