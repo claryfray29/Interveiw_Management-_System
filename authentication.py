@@ -17,7 +17,15 @@ SECRET_KEY = os.getenv("KEY") or os.getenv("FALLBACK_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/login",
+    scopes={
+        "global_admin": "Global administrator with full system access",
+        "company_admin": "Company administrator with access to manage their company's resources",
+        "interviewer": "Interviewer with access to manage their interviews and view assigned candidates",
+        "candidate": "Candidate with access to view and manage their applications and interviews"
+    }
+)
 
 class Token(BaseModel):
     access_token: str
@@ -84,9 +92,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user.system_role = token_data.role
     return user
 
-async def login_for_access_token(data: schemas.Login, db: Session = Depends(get_db)):
-    #role = form_data.scopes[0] if form_data.scopes else "candidate"
-    user = authenticate_user(db, data.role, data.email, data.password)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    role = form_data.scopes[0] if form_data.scopes else "candidate"
+    user = authenticate_user(db, role, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,5 +102,5 @@ async def login_for_access_token(data: schemas.Login, db: Session = Depends(get_
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": data.email, "role": data.role}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": form_data.username, "role": role}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
