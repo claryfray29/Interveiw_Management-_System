@@ -72,3 +72,10 @@ CREATE TABLE interviews(
     FOREIGN KEY (interviewer_id) REFERENCES interviewers(id),
     FOREIGN KEY (candidate_id) REFERENCES candidates(id)
 );
+
+INSERT INTO global_admins (name, email, password) 
+VALUES (
+    'System Administrator', 
+    'globaladmin@example.com', 
+    '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'
+);

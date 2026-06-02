@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 import models, schemas, crud
 from database import SessionLocal, engine, get_db
-from authentication import authenticate_user, create_access_token, get_current_user, verify_token, Token
+from authentication import authenticate_user, create_access_token, get_current_user, verify_token, Token, login_for_access_token
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -38,11 +38,12 @@ app = FastAPI()
 #login for all users
 @app.post("/login", response_model=Token)
 async def login(data: schemas.Login, db: Session = Depends(get_db)):
-    user = authenticate_user(db, data.role, data.email, data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Invalid email or password")
-    access_token = create_access_token(data={"sub": user.email, "role": data.role})
-    return {"access_token": access_token, "token_type": "bearer"}
+    # user = authenticate_user(db, data.role, data.email, data.password)
+    # if not user:
+    #     raise HTTPException(status_code=400, detail="Invalid email or password")
+    # access_token = create_access_token(data={"sub": user.email, "role": data.role})
+    #return {"access_token": access_token, "token_type": "bearer"}
+    return await login_for_access_token(data, db)
 
 #create candidate account
 @app.post("/candidates/", response_model=schemas.Candidate)
