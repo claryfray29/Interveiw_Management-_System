@@ -126,6 +126,7 @@ class InterviewBase(BaseModel):
     interviewer_id: int
     scheduled_time: datetime
     candidate_id: int
+    company_id: int
     feedback: str = None
     status: str = "scheduled"
 

@@ -19,8 +19,14 @@ def create_global_admin(db: Session, admin: schemas.GlobalAdminCreate):
 def add_company(db: Session, company: schemas.CompanyCreate):
     db_company = models.Company(name=company.name)
     db.add(db_company)
+    db.add(db_temp_admin)
     db.commit()
     db.refresh(db_company)
+    #add a temporary company admin when the company is being created for the first time
+    db_temp_admin = models.CompanyAdmin(name=f"{company.name} Admin", email=f"{company.name.lower().replace(' ', '_')}@example.com", password=hashlib.sha256("temp_password".encode()).hexdigest(), company_id=db_company.id)
+    db.add(db_temp_admin)
+    db.commit()
+    db.refresh(db_temp_admin)
     return {"detail": "Company added successfully", "company": db_company}
 
 #global admin specific
@@ -112,7 +118,7 @@ def delete_job(db: Session, job_id: int):
 
 #candidate specific
 def create_application(db: Session, application: schemas.ApplicationCreate):
-    db_application = models.Application(candidate_id=application.candidate_id, job_id=application.job_id, resume=application.resume, status=application.status)
+    db_application = models.Application(candidate_id=application.candidate_id, job_id=application.job_id, resume=application.resume, status=application.status, company_id=application.company_id)
     db.add(db_application)
     db.commit()
     db.refresh(db_application)
@@ -129,7 +135,8 @@ def delete_application(db: Session, application_id: int):
 
 #company admin specific
 def create_interview(db: Session, interview: schemas.InterviewCreate):
-    db_interview = models.Interview(application_id=interview.application_id, interviewer_id=interview.interviewer_id, scheduled_time=interview.scheduled_time, candidate_id=interview.candidate_id, feedback=interview.feedback, status=interview.status)
+    db_interview = models.Interview(application_id=interview.application_id, 
+    interviewer_id=interview.interviewer_id, scheduled_time=interview.scheduled_time, candidate_id=interview.candidate_id, company_id=interview.company_id, feedback=interview.feedback, status=interview.status)
     db.add(db_interview)
     db.commit()
     db.refresh(db_interview)
@@ -152,11 +159,12 @@ def view_upcoming_interviews(db: Session, interviewer_id: int):
 
 
 #return feedback for a specific interview
-def interview_feedback(db: Session, interview_id: int):
+def interview_feedback(db: Session, interview_id: int, feedback: str):
     interview = db.query(models.Interview).filter(models.Interview.id == interview_id).first()
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
     interview.status = "completed"
+    interview.feedback = feedback
     db.commit()
     
     return {"candidate_name": interview.application.candidate.name, "job_title": interview.application.job.title, "feedback": interview.feedback, "status": interview.status}

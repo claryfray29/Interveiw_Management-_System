@@ -65,12 +65,14 @@ CREATE TABLE interviews(
     application_id INT NOT NULL,
     interviewer_id INT NOT NULL,
     candidate_id INT NOT NULL,
+    company_id INT NOT NULL,
     scheduled_time DATETIME NOT NULL,
     status VARCHAR(50) NOT NULL,
     feedback TEXT,
     FOREIGN KEY (application_id) REFERENCES applications(id),
     FOREIGN KEY (interviewer_id) REFERENCES interviewers(id),
-    FOREIGN KEY (candidate_id) REFERENCES candidates(id)
+    FOREIGN KEY (candidate_id) REFERENCES candidates(id),
+    FOREIGN KEY (company_id) REFERENCES companies(id)
 );
 
 INSERT INTO global_admins (name, email, password) 

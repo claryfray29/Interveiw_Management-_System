@@ -9,33 +9,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# #global admin login
-# @app.post("/global_admins/login", response_model=Token)
-# def global_admin_login(admin: schemas.GlobalAdminCreate, db: Session = Depends(get_db)):
-#     user = db.query(models.GlobalAdmin).filter(models.GlobalAdmin.email == admin.email).first()
-#     if not user:
-#         raise HTTPException(status_code=400, detail="Invalid email or password")
-#     access_token = create_access_token(data={"sub": user.email})
-#     return {"access_token": access_token, "token_type": "bearer"}
-
-# #company admin login
-# @app.post("/company_admins/login", response_model=Token)
-# def company_admin_login(admin: schemas.CompanyAdminCreate, db: Session = Depends(get_db)):
-#     user = db.query(models.CompanyAdmin).filter(models.CompanyAdmin.email == admin.email).first()
-#     if not user:
-#         raise HTTPException(status_code=400, detail="Invalid email or password")
-#     access_token = create_access_token(data={"sub": user.email})
-#     return {"access_token": access_token, "token_type": "bearer"}
-
-# #interviewer login
-# @app.post("/interviewers/login", response_model=Token)
-# def interviewer_login(interviewer: schemas.InterviewerCreate, db: Session = Depends(get_db)):
-#     user = db.query(models.Interviewer).filter(models.Interviewer.email == interviewer.email).first()
-#     if not user:
-#         raise HTTPException(status_code=400, detail="Invalid email or password")
-#     access_token = create_access_token(data={"sub": user.email})
-#     return {"access_token": access_token, "token_type": "bearer"}
-
 #login for all users
 @app.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -52,14 +25,12 @@ def create_candidate(candidate: schemas.CandidateCreate, db: Session = Depends(g
     db_candidate = crud.create_candidate(db, candidate)
     return db_candidate
 
-# #candidate login
-# @app.post("/candidates/login", response_model=Token)
-# def candidate_login(candidate: schemas.CandidateCreate, db: Session = Depends(get_db)):
-#     user = db.query(models.Candidate).filter(models.Candidate.email == candidate.email).first()
-#     if not user:
-#         raise HTTPException(status_code=400, detail="Invalid email or password")
-#     access_token = create_access_token(data={"sub": user.email})
-#     return {"access_token": access_token, "token_type": "bearer"}
+#add company (global admin only)
+@app.post("/companies/")
+def add_company(company: schemas.CompanyCreate, current_user: schemas.GlobalAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+    if getattr(current_user, "system_role", None) != "global_admin":
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+    return crud.add_company(db, company)
 
 #delete company (global admin only)
 @app.delete("/companies/{company_id}")
@@ -112,17 +83,24 @@ def create_interview(interview: schemas.InterviewCreate, current_user: schemas.C
 
 #get available jobs (candidate only)
 @app.get("/jobs/available")
-def view_available_jobs(current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
+def view_available_jobs(candidate_id: int, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     return crud.view_available_jobs(db)
 
-#get job application status (candidate only)
-@app.get("/applications/status")
-def view_job_status(current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
+#post application for some job (candidate only)
+@app.post("/applications/")
+def create_application(application: schemas.ApplicationCreate, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.view_job_status(db, current_user.id)
+    return crud.create_application(db, application)
+
+#get job application status (candidate only)
+@app.get("/applications/status")
+def view_job_status(candidate_id: int, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
+    if getattr(current_user, "system_role", None) != "candidate":
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+    return crud.view_job_status(db, candidate_id)
 
 #get upcoming interviews (interviewer only)
 @app.get("/interviews/upcoming")
