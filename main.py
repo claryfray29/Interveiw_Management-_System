@@ -46,6 +46,13 @@ def delete_company_admin(admin_id: int, current_user: schemas.CompanyAdmin = Dep
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     return crud.delete_company_admin(db, admin_id)
 
+#add interviewer (company admin only)
+@app.post("/interviewers/")
+def add_interviewer(interviewer: schemas.InterviewerCreate, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+    if getattr(current_user, "system_role", None) != "company_admin":
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+    return crud.add_interviewer(db, interviewer, company_id=current_user.company_id)
+
 #delete interviewer (company admin only)
 @app.delete("/interviewers/{interviewer_id}")
 def delete_interviewer(interviewer_id: int, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -58,7 +65,7 @@ def delete_interviewer(interviewer_id: int, current_user: schemas.CompanyAdmin =
 def add_job(job: schemas.JobCreate, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "company_admin":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.add_job(db, job)
+    return crud.add_job(db, job, company_id=current_user.company_id)
 
 #delete job (company admin only)
 @app.delete("/jobs/{job_id}")
@@ -70,7 +77,7 @@ def delete_job(job_id: int, current_user: schemas.CompanyAdmin = Depends(get_cur
 #delete application (company admin only)
 @app.delete("/applications/{application_id}")
 def delete_application(application_id: int, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
-    if getattr(current_user, "system_role", None) != "company_admin":
+    if getattr(current_user, "system_role", None) != "company_admin" or getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     return crud.delete_application(db, application_id)
 
@@ -83,24 +90,24 @@ def create_interview(interview: schemas.InterviewCreate, current_user: schemas.C
 
 #get available jobs (candidate only)
 @app.get("/jobs/available")
-def view_available_jobs(candidate_id: int, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
+def view_available_jobs(current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.view_available_jobs(db)
+    return crud.view_available_jobs(db, candidate_id=current_user.id)
 
 #post application for some job (candidate only)
 @app.post("/applications/")
 def create_application(application: schemas.ApplicationCreate, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.create_application(db, application)
+    return crud.create_application(db, application, candidate_id=current_user.id)
 
 #get job application status (candidate only)
 @app.get("/applications/status")
-def view_job_status(candidate_id: int, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
+def view_job_status(current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.view_job_status(db, candidate_id)
+    return crud.view_job_status(db, candidate_id=current_user.id)
 
 #get upcoming interviews (interviewer only)
 @app.get("/interviews/upcoming")
@@ -115,7 +122,6 @@ def post_interview_feedback(interview_id: int, feedback: str, current_user: sche
     if getattr(current_user, "system_role", None) != "interviewer":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     return crud.interview_feedback(db, interview_id, feedback)
-
 
 #update application status (company admin only)
 @app.put("/applications/{application_id}/status")

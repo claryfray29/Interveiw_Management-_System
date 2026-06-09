@@ -19,7 +19,6 @@ def create_global_admin(db: Session, admin: schemas.GlobalAdminCreate):
 def add_company(db: Session, company: schemas.CompanyCreate):
     db_company = models.Company(name=company.name)
     db.add(db_company)
-    db.add(db_temp_admin)
     db.commit()
     db.refresh(db_company)
     #add a temporary company admin when the company is being created for the first time
@@ -65,9 +64,9 @@ def delete_company_admin(db: Session, admin_id: int):
     return {"detail": "Company admin deleted successfully"}
 
 #company admin specific
-def add_interviewer(db: Session, interviewer: schemas.InterviewerCreate):
+def add_interviewer(db: Session, interviewer: schemas.InterviewerCreate, company_id: int):
     hashed_password = hashlib.sha256(interviewer.password.encode()).hexdigest()
-    db_interviewer = models.Interviewer(name=interviewer.name, email=interviewer.email, password=hashed_password, company_id=interviewer.company_id)
+    db_interviewer = models.Interviewer(name=interviewer.name, email=interviewer.email, password=hashed_password, company_id=company_id, role_id=interviewer.role_id)
     db.add(db_interviewer)
     db.commit()
     db.refresh(db_interviewer)
@@ -88,8 +87,19 @@ def delete_interviewer(db: Session, interviewer_id: int):
 
 #candidate specific create new account
 def create_candidate(db: Session, candidate: schemas.CandidateCreate):
+    existing_candidate = db.query(models.Candidate).filter(models.Candidate.email == candidate.email).first()
+    if existing_candidate:
+        raise HTTPException(
+            status_code=400, 
+            detail="A candidate with this email address already exists."
+        )
+
     hashed_password = hashlib.sha256(candidate.password.encode()).hexdigest()
     db_candidate = models.Candidate(name=candidate.name, email=candidate.email, password=hashed_password)
+
+    if candidate.interested_roles:
+        db_candidate.interested_roles = db.query(models.Role).filter(models.Role.id.in_(candidate.interested_roles)).all()
+
     db.add(db_candidate)
     db.commit()
     db.refresh(db_candidate)
@@ -100,8 +110,8 @@ def get_candidate(db: Session, candidate_id: int):
     return db.query(models.Candidate).filter(models.Candidate.id == candidate_id).first()
 
 #company admin specific
-def add_job(db: Session, job: schemas.JobCreate):
-    db_job = models.Job(title=job.title, description=job.description, company_id=job.company_id, vacancies=job.vacancies)
+def add_job(db: Session, job: schemas.JobCreate, company_id: int):
+    db_job = models.Job(title=job.title, description=job.description, company_id=company_id, vacancies=job.vacancies, role_id=job.role_id)
     db.add(db_job)
     db.commit()
     db.refresh(db_job)
@@ -117,14 +127,27 @@ def delete_job(db: Session, job_id: int):
     return {"detail": "Job deleted successfully"}
 
 #candidate specific
-def create_application(db: Session, application: schemas.ApplicationCreate):
-    db_application = models.Application(candidate_id=application.candidate_id, job_id=application.job_id, resume=application.resume, status=application.status, company_id=application.company_id)
+def create_application(db: Session, application: schemas.ApplicationCreate, candidate_id: int):
+
+    existing_count = db.query(models.Application).filter(models.Application.candidate_id==candidate_id).count()
+    if existing_count >= 4:
+        raise HTTPException(status_code=400, detail="application limit reached")
+
+    db_application = db.query(models.Application).filter(models.Application.candidate_id == candidate_id, models.Application.job_id == application.job_id).first()
+    if db_application:
+        raise HTTPException(status_code=400, detail="You have already applied for this job")
+    
+    job = db.query(models.Job).filter(models.Job.id == application.job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job posting not found.")
+
+    db_application = models.Application(candidate_id=candidate_id, job_id=application.job_id, resume=application.resume, status="applied", company_id=job.company_id)
     db.add(db_application)
     db.commit()
     db.refresh(db_application)
     return {"detail": "Application created successfully", "application": db_application}
 
-#company admin specific
+#company admin and candidate specific
 def delete_application(db: Session, application_id: int):
     db_application = db.query(models.Application).filter(models.Application.id == application_id).first()
     if not db_application:
@@ -144,8 +167,13 @@ def create_interview(db: Session, interview: schemas.InterviewCreate):
 
 
 #candidate specific
-def view_available_jobs(db: Session):
-    return db.query(models.Job).filter(models.Job.vacancies > 0).all()
+def view_available_jobs(db: Session, candidate_id: int = None):
+    candidate = db.query(models.Candidate).filter(models.Candidate.id == candidate_id).first()
+    if not candidate or not candidate.interested_roles:
+        return []
+    
+    preferred_ids = [role.id for role in candidate.interested_roles]
+    return db.query(models.Job).filter(models.Job.role_id.in_(preferred_ids), models.Job.vacancies > 0).all()
 
 #candidate specific
 def view_job_status(db: Session, candidate_id: int):

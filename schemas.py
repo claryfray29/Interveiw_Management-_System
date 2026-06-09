@@ -1,6 +1,18 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+class RoleBase(BaseModel):
+    name: str
+
+class RoleCreate(RoleBase):
+    pass
+
+class Role(RoleBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
 #login for all users
 class Login(BaseModel):
     email: str
@@ -58,7 +70,7 @@ class InterviewerBase(BaseModel):
     name: str
     email: str
     password: str
-
+    role_id: int
 class InterviewerCreate(InterviewerBase):
     pass
 
@@ -74,12 +86,15 @@ class CandidateBase(BaseModel):
     name: str
     email: str
     password: str
+    interested_roles: list[int] = []
 
 class CandidateCreate(CandidateBase):
-    pass
+    #pass
+    interested_roles: list[int] = []
 
 class Candidate(CandidateBase):
     id: int
+    interested_roles: list[Role] = []
 
     class Config:
         from_attributes = True
@@ -89,14 +104,15 @@ class Candidate(CandidateBase):
 class JobBase(BaseModel):
     title: str
     description: str
-    company_id: int
     vacancies: int
+    role_id: int
 
 class JobCreate(JobBase):
     pass
 
 class Job(JobBase):
     id: int
+    company_id: int
 
     class Config:
         from_attributes = True
@@ -104,17 +120,16 @@ class Job(JobBase):
 
 #application
 class ApplicationBase(BaseModel):
-    candidate_id: int
     job_id: int
-    company_id: int
     resume: str
-    status: str = "applied"
     
 class ApplicationCreate(ApplicationBase):
     pass
 
 class Application(ApplicationBase):
     id: int
+    candidate_id: int
+    company_id: int
 
     class Config:
         from_attributes = True
