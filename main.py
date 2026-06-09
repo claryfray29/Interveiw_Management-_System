@@ -77,7 +77,7 @@ def delete_job(job_id: int, current_user: schemas.CompanyAdmin = Depends(get_cur
 #delete application (company admin only)
 @app.delete("/applications/{application_id}")
 def delete_application(application_id: int, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
-    if getattr(current_user, "system_role", None) != "company_admin" or getattr(current_user, "system_role", None) != "candidate":
+    if getattr(current_user, "system_role", None) != "company_admin" and getattr(current_user, "system_role", None) != "candidate":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     return crud.delete_application(db, application_id)
 

@@ -139,10 +139,11 @@ class Application(ApplicationBase):
 class InterviewBase(BaseModel):
     application_id: int
     interviewer_id: int
-    scheduled_time: datetime
-    candidate_id: int
-    company_id: int
-    feedback: str = None
+    scheduled_start: datetime
+    scheduled_end: datetime
+    # candidate_id: int
+    # company_id: int
+    # feedback: str = None
     status: str = "scheduled"
 
 class InterviewCreate(InterviewBase):
