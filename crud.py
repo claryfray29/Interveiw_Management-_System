@@ -4,7 +4,7 @@ from fastapi import HTTPException
 import hashlib
 from datetime import datetime
 
-from calendar import add_interview
+from google_calendar import add_interview
 
 def get_global_admin(db: Session, admin_id: int):
     return db.query(models.GlobalAdmin).filter(models.GlobalAdmin.id == admin_id).first()
@@ -180,7 +180,7 @@ def create_interview(db: Session, interview: schemas.InterviewCreate):
     if calendar_invite_url:
         saved_feedback = f"Interview pending. Calendar Event Link: {calendar_invite_url}"
 
-    db_interview = models.Interview(application_id=interview.application_id, interviewer_id=interview.interviewer_id, scheduled_time=interview.scheduled_time, candidate_id=application.candidate_id, company_id=application.company_id, role=application.job.role_id, feedback=saved_feedback, status=interview.status)
+    db_interview = models.Interview(application_id=interview.application_id, interviewer_id=interview.interviewer_id, scheduled_time=interview.scheduled_start, candidate_id=application.candidate_id, company_id=application.company_id, role=application.job.role_id, feedback=saved_feedback, status=interview.status)
     db.add(db_interview)
     db.commit()
     db.refresh(db_interview)
@@ -232,6 +232,26 @@ def update_application_status(db: Session, application_id: int, status: str):
     application = db.query(models.Application).filter(models.Application.id == application_id).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
+
+    if status.lower() == "selected" and application.status.lower() == "selected":
+        return {"detail": "aApplication is already selected"}
+
     application.status = status
+
+    if status.lower() == "selected":
+        job = application.job
+
+        if not job:
+            raise HTTPException(status_code=404, detail="job not found")
+
+        if job.vacancies <= 0:
+            raise HTTPException(status_code=400, detail="no vacancy")
+
+        job.vacancies -= 1
+
+        if job.vacancies == 0:
+            db.query(models.Application).filter(models.Application.job_id == job.id, models.Application.id != application.id, models.Application.status != "selected").update({"status": "rejected"}, synchronize_session="fetch")
+
+
     db.commit()
     return {"detail": "Application status updated successfully", "application": application}
