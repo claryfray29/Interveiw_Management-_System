@@ -44,7 +44,9 @@ CREATE TABLE candidates(
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    skills TEXT,
+    resume TEXT
 );
 
 CREATE TABLE candidate_roles (
@@ -62,6 +64,7 @@ CREATE TABLE jobs(
     company_id INT NOT NULL,
     vacancies INT NOT NULL,
     role_id INT NOT NULL,
+    skills_required TEXT NOT NULL,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );

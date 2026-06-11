@@ -64,6 +64,8 @@ class Candidate(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
+    skills = Column(String(255), nullable=True)
+    resume = Column(String(255), nullable=True)
 
     interested_roles = relationship("Role", secondary=candidate_roles, back_populates="candidates")
 
@@ -76,6 +78,7 @@ class Job(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     description = Column(String(255), nullable=False)
+    skills_required = Column(String(255), nullable=False)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     vacancies = Column(Integer, nullable=False, default=0)
 

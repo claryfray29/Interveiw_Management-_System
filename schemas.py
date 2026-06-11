@@ -94,10 +94,13 @@ class CandidateBase(BaseModel):
     email: str
     password: str
     interested_roles: list[int] = []
+    skills: Optional[str] = None
+    resume: Optional[str] = None
 
 class CandidateCreate(CandidateBase):
     #pass
     interested_roles: list[int] = []
+    skills: Optional[str] = None
 
 class Candidate(CandidateBase):
     id: int
@@ -115,7 +118,7 @@ class JobBase(BaseModel):
     role_id: int
 
 class JobCreate(JobBase):
-    pass
+    skills_required: str
 
 class Job(JobBase):
     id: int

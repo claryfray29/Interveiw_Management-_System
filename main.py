@@ -4,6 +4,7 @@ import models, schemas, crud
 from database import SessionLocal, engine, get_db
 from fastapi.security import OAuth2PasswordRequestForm
 from authentication import authenticate_user, create_access_token, get_current_user, verify_token, Token, login_for_access_token
+from typing import Optional
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -24,6 +25,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 def create_candidate(candidate: schemas.CandidateCreate, db: Session = Depends(get_db)):
     db_candidate = crud.create_candidate(db, candidate)
     return db_candidate
+
+@app.put("/candidates/profile")
+def update_profile(skills: str, resume: str, current_user: schemas.Candidate = Depends(get_current_user), db: Session = Depends(get_db)):
+    if getattr(current_user, "system_role", None) != "candidate":
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+        
+    return crud.update_candidate_profile(db, candidate_id=current_user.id, skills=skills, resume_url=resume)
 
 #add company (global admin only)
 # @app.post("/companies/")
@@ -156,6 +164,13 @@ def post_interview_feedback(interview_id: int, feedback: str, current_user: sche
         
     return crud.interview_feedback(db, interview_id=interview_id, feedback=feedback,current_interviewer=current_user)
 
+#company can view applications
+@app.get("/companies/applications")
+def view_company_applications(job_id: Optional[int] = None, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+    if getattr(current_user, "system_role", None) != "company_admin":
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+    
+    return crud.company_view_applications(db, company_id=current_user.company_id, job_id=job_id)
 
 #update application status (company admin only)
 @app.put("/applications/{application_id}/status")

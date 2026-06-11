@@ -4,6 +4,7 @@ from fastapi import HTTPException
 import hashlib
 from datetime import datetime, timezone
 from google_calendar import add_interview
+from typing import Optional
 
 def get_global_admin(db: Session, admin_id: int):
     return db.query(models.GlobalAdmin).filter(models.GlobalAdmin.id == admin_id).first()
@@ -142,7 +143,7 @@ def create_candidate(db: Session, candidate: schemas.CandidateCreate):
         )
 
     hashed_password = hashlib.sha256(candidate.password.encode()).hexdigest()
-    db_candidate = models.Candidate(name=candidate.name, email=candidate.email, password=hashed_password)
+    db_candidate = models.Candidate(name=candidate.name, email=candidate.email, password=hashed_password, skills=candidate.skills, resume=candidate.resume)
 
     if candidate.interested_roles:
         db_candidate.interested_roles = db.query(models.Role).filter(models.Role.id.in_(candidate.interested_roles)).all()
@@ -152,13 +153,23 @@ def create_candidate(db: Session, candidate: schemas.CandidateCreate):
     db.refresh(db_candidate)
     return db_candidate
 
+#candidates get to update their profile
+def update_candidate_profile(db: Session, candidate_id: int, skills: str, resume_url: str):
+    candidate = db.query(models.Candidate).filter(models.Candidate.id == candidate_id).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate missing.")
+    
+    candidate.skills = skills
+    db.commit()
+    return {"detail": "Candidate profile updated successfully", "skills": candidate.skills}
+
 #for checking login credentials of candidate
 def get_candidate(db: Session, candidate_id: int):
     return db.query(models.Candidate).filter(models.Candidate.id == candidate_id).first()
 
 #company admin specific
 def add_job(db: Session, job: schemas.JobCreate, company_id: int):
-    db_job = models.Job(title=job.title, description=job.description, company_id=company_id, vacancies=job.vacancies, role_id=job.role_id)
+    db_job = models.Job(title=job.title, description=job.description, skills_required=job.skills_required, company_id=company_id, vacancies=job.vacancies, role_id=job.role_id)
     db.add(db_job)
     db.commit()
     db.refresh(db_job)
@@ -172,6 +183,20 @@ def delete_job(db: Session, job_id: int):
     db.delete(db_job)
     db.commit()
     return {"detail": "Job deleted successfully"}
+
+#companyadmins can view applications they got
+def company_view_applications(db: Session, company_id: int, job_id: Optional[int] = None):
+    query = db.query(models.Application).filter(models.Application.company_id == company_id)
+    
+    if job_id is not None:
+        query = query.filter(models.Application.job_id == job_id)
+        
+    applications = query.all()
+    
+    return [
+        {"application_id": app.id,"candidate_name": app.candidate.name,"candidate_email": app.candidate.email,"candidate_skills": app.candidate.skills, "job_title": app.job.title,"resume": app.resume,"status": app.status}
+        for app in applications
+    ]
 
 #candidate specific
 def create_application(db: Session, application: schemas.ApplicationCreate, candidate_id: int):
@@ -264,7 +289,7 @@ def interview_feedback(db: Session, interview_id: int, feedback: str, current_in
 
     if interview.application:
         interview.application.status = "interview done"
-        
+
     db.commit()
     
     return {"candidate_name": interview.application.candidate.name, "job_title": interview.application.job.title, "feedback": interview.feedback, "status": interview.status}
