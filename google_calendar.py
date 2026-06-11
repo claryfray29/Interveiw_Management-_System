@@ -42,11 +42,11 @@ def add_interview(title: str, description: str, start_time: datetime.datetime, e
             'description': description,
             'start': {
                 'dateTime': start,
-                'timeZone': 'IST',
+                'timeZone': 'Asia/Kolkata',
             },
             'end': {
                 'dateTime': end,
-                'timeZone': 'IST',
+                'timeZone': 'Asia/Kolkata',
             },
             'attendees': [
                 {'email': candidate_email},

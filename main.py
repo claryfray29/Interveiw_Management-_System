@@ -26,11 +26,18 @@ def create_candidate(candidate: schemas.CandidateCreate, db: Session = Depends(g
     return db_candidate
 
 #add company (global admin only)
-@app.post("/companies/")
-def add_company(company: schemas.CompanyCreate, current_user: schemas.GlobalAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+# @app.post("/companies/")
+# def add_company(company: schemas.CompanyCreate, current_user: schemas.GlobalAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+#     if getattr(current_user, "system_role", None) != "global_admin":
+#         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+#     return crud.add_company(db, company)
+
+@app.post("/companies/", status_code=201)
+def add_company(payload: schemas.CompanyWithAdminCreate, current_user: schemas.GlobalAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "global_admin":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.add_company(db, company)
+    
+    return crud.add_company(db, payload)
 
 #delete company (global admin only)
 @app.delete("/companies/{company_id}")
@@ -41,24 +48,49 @@ def delete_company(company_id: int, current_user: schemas.GlobalAdmin = Depends(
 
 #delete company admin (company admin only)
 @app.delete("/company_admins/{admin_id}")
-def delete_company_admin(admin_id: int, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_company_admin(admin_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "company_admin":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.delete_company_admin(db, admin_id)
+    
+    is_super = getattr(current_user, "is_super_admin", False)
+    if not is_super:
+        raise HTTPException(
+            status_code=403, 
+            detail="Only a Company Super Admin can delete company admins."
+        )
+        
+    return crud.delete_company_admin_secure(db, admin_id=admin_id, company_id=current_user.company_id)
 
-#add interviewer (company admin only)
-@app.post("/interviewers/")
-def add_interviewer(interviewer: schemas.InterviewerCreate, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
-    if getattr(current_user, "system_role", None) != "company_admin":
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.add_interviewer(db, interviewer, company_id=current_user.company_id)
+# #add interviewer (company admin only)
+# @app.post("/interviewers/")
+# def add_interviewer(interviewer: schemas.InterviewerCreate, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+#     if getattr(current_user, "system_role", None) != "company_admin":
+#         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+#     return crud.add_interviewer(db, interviewer, company_id=current_user.company_id)
+
+@app.post("/companies/users")
+def create_company_user(payload: schemas.CompanyUserCreate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+    role = getattr(current_user, "system_role", None)
+    
+    if role != "company_admin":
+        raise HTTPException(status_code=403, detail="Not authorized to perform company user updates")
+    
+    is_super = getattr(current_user, "is_super_admin", False)
+    
+    if payload.account_type == "company_admin" and not is_super:
+        raise HTTPException(status_code=403, detail="Unauthorise")
+        
+    if payload.account_type not in ["company_admin", "interviewer"]:
+        raise HTTPException(status_code=400, detail="Invalid account type target.")
+
+    return crud.create_company_user(db, user_data=payload, company_id=current_user.company_id)
 
 #delete interviewer (company admin only)
 @app.delete("/interviewers/{interviewer_id}")
 def delete_interviewer(interviewer_id: int, current_user: schemas.CompanyAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "company_admin":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.delete_interviewer(db, interviewer_id)
+    return crud.delete_interviewer(db, interviewer_id, company_id=current_user.company_id)
 
 #add job (company admin only)
 @app.post("/jobs/")
@@ -121,7 +153,9 @@ def view_upcoming_interviews(current_user: schemas.Interviewer = Depends(get_cur
 def post_interview_feedback(interview_id: int, feedback: str, current_user: schemas.Interviewer = Depends(get_current_user), db: Session = Depends(get_db)):
     if getattr(current_user, "system_role", None) != "interviewer":
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    return crud.interview_feedback(db, interview_id, feedback)
+        
+    return crud.interview_feedback(db, interview_id=interview_id, feedback=feedback,current_interviewer=current_user)
+
 
 #update application status (company admin only)
 @app.put("/applications/{application_id}/status")

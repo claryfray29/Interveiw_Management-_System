@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -30,6 +30,8 @@ class Company(Base):
     applications = relationship("Application", back_populates="company", cascade="all, delete-orphan")
     interviews = relationship("Interview", back_populates="company", cascade="all, delete-orphan")
 
+
+
 class CompanyAdmin(Base):
     __tablename__ = "company_admins"
 
@@ -38,6 +40,7 @@ class CompanyAdmin(Base):
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    is_super_admin = Column(Boolean, nullable=False, default=False)
 
     company = relationship("Company", back_populates="admins")
 

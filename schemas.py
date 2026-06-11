@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
 
 class RoleBase(BaseModel):
     name: str
@@ -34,6 +35,12 @@ class GlobalAdmin(GlobalAdminBase):
     class Config:
         from_attributes = True
 
+class CompanyUserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+    account_type: str
+    role_id: Optional[int] = None
 
 #company
 class CompanyBase(BaseModel):
@@ -154,3 +161,10 @@ class Interview(InterviewBase):
 
     class Config:
         from_attributes = True
+
+
+class CompanyWithAdminCreate(BaseModel):
+    company_name: str
+    super_admin_name: str
+    super_admin_email: EmailStr
+    super_admin_password: str

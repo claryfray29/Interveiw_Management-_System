@@ -25,6 +25,7 @@ CREATE TABLE company_admins(
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     company_id INT NOT NULL,
+    is_super_admin BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
 );
 

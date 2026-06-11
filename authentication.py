@@ -90,6 +90,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
 
     user.system_role = token_data.role
+    if token_data.role == "company_admin":
+        user.is_super_admin = getattr(user, "is_super_admin", False)
+
     return user
 
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

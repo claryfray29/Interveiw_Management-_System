@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 from fastapi import HTTPException
 import hashlib
-from datetime import datetime
-
+from datetime import datetime, timezone
 from google_calendar import add_interview
 
 def get_global_admin(db: Session, admin_id: int):
@@ -18,17 +17,32 @@ def create_global_admin(db: Session, admin: schemas.GlobalAdminCreate):
     return db_admin
 
 #global admin specific
-def add_company(db: Session, company: schemas.CompanyCreate):
-    db_company = models.Company(name=company.name)
+def add_company(db: Session, payload: schemas.CompanyWithAdminCreate):
+    existing_company = db.query(models.Company).filter(models.Company.name == payload.company_name).first()
+    if existing_company:
+        raise HTTPException(status_code=400, detail="Company already exists.")
+
+    existing_email = db.query(models.CompanyAdmin).filter(models.CompanyAdmin.email == payload.super_admin_email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="An admin already exists.")
+
+    db_company = models.Company(name=payload.company_name)
     db.add(db_company)
     db.commit()
     db.refresh(db_company)
-    #add a temporary company admin when the company is being created for the first time
-    db_temp_admin = models.CompanyAdmin(name=f"{company.name} Admin", email=f"{company.name.lower().replace(' ', '_')}@example.com", password=hashlib.sha256("temp_password".encode()).hexdigest(), company_id=db_company.id)
-    db.add(db_temp_admin)
+    
+    hashed_password = hashlib.sha256(payload.super_admin_password.encode()).hexdigest() 
+    
+    db_super_admin = models.CompanyAdmin(name=payload.super_admin_name, email=payload.super_admin_email, password=hashed_password, company_id=db_company.id, is_super_admin=True)
+    db.add(db_super_admin)
     db.commit()
-    db.refresh(db_temp_admin)
-    return {"detail": "Company added successfully", "company": db_company}
+    db.refresh(db_super_admin)
+    
+    return {
+        "detail": "Company and primary Super Admin created successfully", 
+        "company_id": db_company.id,
+        "company_name": db_company.name
+    }
 
 #global admin specific
 def get_company(db: Session, company_id: int):
@@ -43,44 +57,75 @@ def delete_company(db: Session, company_id: int):
     db.commit()
     return {"detail": "Company deleted successfully"}
 
-#company admin specific
-def add_company_admin(db: Session, admin: schemas.CompanyAdminCreate):
-    hashed_password = hashlib.sha256(admin.password.encode()).hexdigest()
-    db_admin = models.CompanyAdmin(name=admin.name, email=admin.email, password=hashed_password, company_id=admin.company_id)
-    db.add(db_admin)
+def create_company_user(db: Session, user_data: schemas.CompanyUserCreate, company_id: int):
+    hashed_password = hashlib.sha256(user_data.password.encode()).hexdigest()
+    
+    if user_data.account_type == "company_admin":
+        existing = db.query(models.CompanyAdmin).filter(models.CompanyAdmin.email == user_data.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered as an admin.")
+            
+        db_user = models.CompanyAdmin(name=user_data.name, email=user_data.email, password=hashed_password, company_id=company_id,is_super_admin=False)
+    elif user_data.account_type == "interviewer":
+        if not user_data.role_id:
+            raise HTTPException(status_code=400, detail="role_id is required for interviewers.")
+            
+        existing = db.query(models.Interviewer).filter(models.Interviewer.email == user_data.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered as an interviewer.")
+            
+        db_user = models.Interviewer(name=user_data.name, email=user_data.email, password=hashed_password, company_id=company_id, role_id=user_data.role_id)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid account type requested.")
+
+    db.add(db_user)
     db.commit()
-    db.refresh(db_admin)
-    return {"detail": "Company admin added successfully", "company_admin": db_admin}
+    db.refresh(db_user)
+    return {"detail": f"{user_data.account_type.replace('_', ' ').title()} added successfully", "user": user_data.email}
+
+# #company admin specific
+# def add_company_admin(db: Session, admin: schemas.CompanyAdminCreate):
+#     hashed_password = hashlib.sha256(admin.password.encode()).hexdigest()
+#     db_admin = models.CompanyAdmin(name=admin.name, email=admin.email, password=hashed_password, company_id=admin.company_id)
+#     db.add(db_admin)
+#     db.commit()
+#     db.refresh(db_admin)
+#     return {"detail": "Company admin added successfully", "company_admin": db_admin}
 
 #company admin login
 def get_company_admin(db: Session, admin_id: int):
     return db.query(models.CompanyAdmin).filter(models.CompanyAdmin.id == admin_id).first()
 
 #company admin specific
-def delete_company_admin(db: Session, admin_id: int):
-    db_admin = db.query(models.CompanyAdmin).filter(models.CompanyAdmin.id == admin_id).first()
+def delete_company_admin_secure(db: Session, admin_id: int, company_id: int):
+    db_admin = db.query(models.CompanyAdmin).filter(models.CompanyAdmin.id == admin_id, models.CompanyAdmin.company_id == company_id).first()
+    
     if not db_admin:
-        raise HTTPException(status_code=404, detail="Company admin not found")
+        raise HTTPException(status_code=404, detail="Company administrator not found within your organization.")
+        
+    if db_admin.is_super_admin:
+        raise HTTPException(status_code=400, detail="The primary Super Admin account cannot be deleted.")
+
     db.delete(db_admin)
     db.commit()
-    return {"detail": "Company admin deleted successfully"}
+    return {"detail": "Company administrator deleted successfully."}
 
-#company admin specific
-def add_interviewer(db: Session, interviewer: schemas.InterviewerCreate, company_id: int):
-    hashed_password = hashlib.sha256(interviewer.password.encode()).hexdigest()
-    db_interviewer = models.Interviewer(name=interviewer.name, email=interviewer.email, password=hashed_password, company_id=company_id, role_id=interviewer.role_id)
-    db.add(db_interviewer)
-    db.commit()
-    db.refresh(db_interviewer)
-    return {"detail": "Interviewer added successfully", "interviewer": db_interviewer}
+# #company admin specific
+# def add_interviewer(db: Session, interviewer: schemas.InterviewerCreate, company_id: int):
+#     hashed_password = hashlib.sha256(interviewer.password.encode()).hexdigest()
+#     db_interviewer = models.Interviewer(name=interviewer.name, email=interviewer.email, password=hashed_password, company_id=company_id, role_id=interviewer.role_id)
+#     db.add(db_interviewer)
+#     db.commit()
+#     db.refresh(db_interviewer)
+#     return {"detail": "Interviewer added successfully", "interviewer": db_interviewer}
 
 #for interviewer login
 def get_interviewer(db: Session, interviewer_id: int):
     return db.query(models.Interviewer).filter(models.Interviewer.id == interviewer_id).first()
 
 #company admin specific
-def delete_interviewer(db: Session, interviewer_id: int):
-    db_interviewer = db.query(models.Interviewer).filter(models.Interviewer.id == interviewer_id).first()
+def delete_interviewer(db: Session, interviewer_id: int, company_id: int):
+    db_interviewer = db.query(models.Interviewer).filter(models.Interviewer.id == interviewer_id, models.Interviewer.company_id == company_id).first()
     if not db_interviewer:
         raise HTTPException(status_code=404, detail="Interviewer not found")
     db.delete(db_interviewer)
@@ -208,22 +253,34 @@ def view_upcoming_interviews(db: Session, interviewer_id: int):
 
 
 #return feedback for a specific interview
-def interview_feedback(db: Session, interview_id: int, feedback: str):
-    interview = db.query(models.Interview).filter(models.Interview.id == interview_id).first()
+def interview_feedback(db: Session, interview_id: int, feedback: str, current_interviewer: models.Interviewer):
+    interview = db.query(models.Interview).filter(models.Interview.id == interview_id,models.Interview.interviewer_id == current_interviewer.id).first()
+    
     if not interview:
         raise HTTPException(status_code=404, detail="Interview not found")
-    interview.status = "completed"
+        
+    interview.status = "done"
     interview.feedback = feedback
+
+    if interview.application:
+        interview.application.status = "interview done"
+        
     db.commit()
     
     return {"candidate_name": interview.application.candidate.name, "job_title": interview.application.job.title, "feedback": interview.feedback, "status": interview.status}
 
 #company admin rejecting all the missed interviews of a specific company
+
+
 def missed_interviews(db: Session, company_id: int):
-    missed_interviews = db.query(models.Interview).join(models.Job).filter(models.Job.company_id == company_id, models.Interview.scheduled_time < datetime.now(), models.Interview.status == "scheduled").all()
+    current_time = datetime.now(timezone.utc)
+    
+    missed_interviews = db.query(models.Interview).filter(models.Interview.company_id == company_id, models.Interview.scheduled_time < current_time, models.Interview.status == "scheduled").all()
+    
     for interview in missed_interviews:
         interview.status = "rejected"
         interview.feedback = "Candidate missed the interview"
+        
     db.commit()
     return {"detail": f"{len(missed_interviews)} missed interviews marked as rejected"}
 
@@ -234,24 +291,25 @@ def update_application_status(db: Session, application_id: int, status: str):
         raise HTTPException(status_code=404, detail="Application not found")
 
     if status.lower() == "selected" and application.status.lower() == "selected":
-        return {"detail": "aApplication is already selected"}
+        raise HTTPException(
+            status_code=400, 
+            detail="Application has already been selected."
+        )
 
     application.status = status
 
     if status.lower() == "selected":
         job = application.job
-
         if not job:
-            raise HTTPException(status_code=404, detail="job not found")
+            raise HTTPException(status_code=404, detail="Job not found")
 
         if job.vacancies <= 0:
-            raise HTTPException(status_code=400, detail="no vacancy")
+            raise HTTPException(status_code=400, detail="No vacancies available for this position.")
 
         job.vacancies -= 1
 
         if job.vacancies == 0:
             db.query(models.Application).filter(models.Application.job_id == job.id, models.Application.id != application.id, models.Application.status != "selected").update({"status": "rejected"}, synchronize_session="fetch")
-
 
     db.commit()
     return {"detail": "Application status updated successfully", "application": application}
