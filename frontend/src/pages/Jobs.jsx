@@ -38,7 +38,9 @@ export default function Jobs() {
       </div>
 
       {jobs.length === 0 ? (
-        <div className="empty"><div className="icon">💼</div><div className="title">No jobs available</div></div>
+        <div className="empty">
+          <div className="title">No jobs available</div>
+        </div>
       ) : (
         <div className="table-wrap">
           <table>
@@ -47,7 +49,7 @@ export default function Jobs() {
               {jobs.map(j => (
                 <tr key={j.id}>
                   <td><strong>{j.title}</strong></td>
-                  <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.description}</td>
+                  <td className="table-cell-description">{j.description}</td>
                   <td>{j.vacancies}</td>
                   <td>{(j.skills_required || '').split(',').map((s, i) => <span key={i} className="chip">{s.trim()}</span>)}</td>
                   <td><button className="btn btn-success btn-sm" onClick={() => { setJob(j); setResume(''); setMsg(''); }}>Apply</button></td>

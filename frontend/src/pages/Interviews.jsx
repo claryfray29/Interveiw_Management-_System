@@ -37,7 +37,9 @@ export default function Interviews() {
       </div>
 
       {interviews.length === 0 ? (
-        <div className="empty"><div className="icon">🗓</div><div className="title">No upcoming interviews</div></div>
+        <div className="empty">
+          <div className="title">No upcoming interviews</div>
+        </div>
       ) : (
         <div className="table-wrap">
           <table>
@@ -50,7 +52,7 @@ export default function Interviews() {
                   <td>#{i.application_id}</td>
                   <td>{new Date(i.scheduled_time).toLocaleString()}</td>
                   <td><span className={`badge badge-${i.status}`}>{i.status}</span></td>
-                  <td style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--muted)' }}>{i.feedback || '—'}</td>
+                  <td className="table-cell-truncated">{i.feedback || '—'}</td>
                   <td><button className="btn btn-ghost btn-sm" onClick={() => { setSelected(i.id); setFeedback(''); }}>+ Feedback</button></td>
                 </tr>
               ))}

@@ -33,7 +33,9 @@ export default function MyApplications() {
       </div>
 
       {apps.length === 0 ? (
-        <div className="empty"><div className="icon">📋</div><div className="title">No applications yet</div></div>
+        <div className="empty">
+          <div className="title">No applications yet</div>
+        </div>
       ) : (
         <div className="table-wrap">
           <table>
@@ -44,7 +46,7 @@ export default function MyApplications() {
                   <td>#{a.id}</td>
                   <td>{a.job_id}</td>
                   <td><span className={`badge badge-${a.status}`}>{a.status}</span></td>
-                  <td><a href={a.resume} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontSize: 12 }}>View ↗</a></td>
+                  <td><a href={a.resume} target="_blank" rel="noreferrer" className="table-link">View ↗</a></td>
                   <td><button className="btn btn-danger btn-sm" onClick={() => withdraw(a.id)}>Withdraw</button></td>
                 </tr>
               ))}

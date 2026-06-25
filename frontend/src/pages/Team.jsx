@@ -27,7 +27,7 @@ export default function Team() {
         <div><h1>Team</h1><p>Add interviewers and admins</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add User</button>
       </div>
-      <p style={{ color: 'var(--muted)', fontSize: 13 }}>💡 Super admins can add company admins. All admins can add interviewers.</p>
+      <p className="team-disclaimer-banner">Super admins can add company admins. All admins can add interviewers.</p>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Add Team Member"
         footer={<><button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" onClick={addUser}>Add</button></>}>

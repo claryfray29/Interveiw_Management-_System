@@ -15,7 +15,7 @@ export default function Schedule() {
         method: 'POST',
         body: JSON.stringify({ application_id: +form.appId, interviewer_id: +form.interviewerId, scheduled_start: form.start, scheduled_end: form.end, status: 'scheduled' }),
       });
-      setMsg('✓ Interview scheduled! Calendar invites sent.');
+      setMsg('Interview scheduled! Calendar invites sent successfully.');
       setForm({ appId: '', interviewerId: '', start: '', end: '' });
     } catch (e) { setMsg(e.message); }
   }
@@ -23,8 +23,12 @@ export default function Schedule() {
   return (
     <div>
       <div className="page-header"><div><h1>Schedule Interview</h1><p>Calendar invites are sent automatically</p></div></div>
-      <div className="card" style={{ maxWidth: 520 }}>
-        {msg && <div className={msg.startsWith('✓') ? '' : 'error-box'} style={msg.startsWith('✓') ? { color: 'var(--success)', fontSize: 13, marginBottom: 14 } : {}}>{msg}</div>}
+      <div className="card schedule-card-constrained">
+        {msg && (
+          <div className={msg.includes('successfully') ? 'success-message-text' : 'error-box'}>
+            {msg}
+          </div>
+        )}
         <div className="form-group"><label>Application ID</label><input type="number" placeholder="e.g. 42" value={form.appId} onChange={set('appId')} /></div>
         <div className="form-group"><label>Interviewer ID</label><input type="number" placeholder="e.g. 7" value={form.interviewerId} onChange={set('interviewerId')} /></div>
         <div className="form-row">

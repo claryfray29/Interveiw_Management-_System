@@ -32,9 +32,11 @@ export default function CompanyJobs() {
   }
 
   async function deleteJob(id) {
-    if (!window.confirm('Delete this job?')) return;
-    try { await apiFetch(`/jobs/${id}`, token, { method: 'DELETE' }); load(); }
-    catch (e) { alert(e.message); }
+    if (!window.confirm('Delete this job listing?')) return;
+    try {
+      await apiFetch(`/jobs/${id}`, token, { method: 'DELETE' });
+      load();
+    } catch (e) { alert(e.message); }
   }
 
   if (loading) return <Spinner />;
@@ -42,21 +44,24 @@ export default function CompanyJobs() {
   return (
     <div>
       <div className="page-header">
-        <div><h1>Job Listings</h1><p>Manage open positions</p></div>
+        <div><h1>Jobs Portal</h1><p>Manage your corporate job openings</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Post Job</button>
       </div>
 
       {jobs.length === 0 ? (
-        <div className="empty"><div className="icon">💼</div><div className="title">No jobs posted yet</div></div>
+        <div className="empty">
+          <div className="title">No jobs listed yet</div>
+        </div>
       ) : (
         <div className="table-wrap">
           <table>
-            <thead><tr><th>ID</th><th>Title</th><th>Vacancies</th><th>Skills</th><th></th></tr></thead>
+            <thead><tr><th>ID</th><th>Title</th><th>Description</th><th>Vacancies</th><th>Skills</th><th></th></tr></thead>
             <tbody>
               {jobs.map(j => (
                 <tr key={j.id}>
                   <td>#{j.id}</td>
                   <td><strong>{j.title}</strong></td>
+                  <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.description}</td>
                   <td>{j.vacancies}</td>
                   <td>{(j.skills_required || '').split(',').slice(0,3).map((s, i) => <span key={i} className="chip">{s.trim()}</span>)}</td>
                   <td><button className="btn btn-danger btn-sm" onClick={() => deleteJob(j.id)}>Delete</button></td>

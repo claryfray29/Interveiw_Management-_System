@@ -96,6 +96,25 @@ tr:hover td { background: rgba(59,130,246,0.03); }
 .table-link:hover {
   text-decoration: underline;
 }
+
+/* Truncated text utility for table columns */
+.table-cell-truncated {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Truncated description text inside table cells */
+.table-cell-description {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Badges */
 .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
 .badge-applied     { background: rgba(59,130,246,0.15); color: #60A5FA; }
@@ -296,4 +315,82 @@ select.inline { background: var(--bg); border: 1px solid var(--border); color: v
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── AUTHENTICATION PAGE LAYOUT ─────────────── */
+.auth-wrapper {
+  min-height: 100vh; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  background: radial-gradient(ellipse at 60% 40%, rgba(59,130,246,0.08) 0%, transparent 65%), var(--bg);
+}
+
+.auth-card {
+  width: 400px;
+}
+
+.auth-brand {
+  font-size: 24px; 
+  font-weight: 700; 
+  margin-bottom: 6px;
+}
+
+.auth-subtitle {
+  color: var(--muted); 
+  font-size: 13px; 
+  margin-bottom: 28px;
+}
+
+.role-picker-grid {
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 4px; 
+  background: var(--bg); 
+  padding: 4px; 
+  borderRadius: 6px; 
+  margin-bottom: 24px;
+}
+
+.role-picker-btn {
+  padding: 7px 2px; 
+  font-size: 11px; 
+  font-weight: 500;
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.auth-footer-prompt {
+  text-align: center; 
+  font-size: 13px; 
+  color: var(--muted);
+}
+
+
+
+/* Profile edit panel constraints */
+.profile-card-constrained {
+  max-width: 500px;
+}
+
+/* Success notification message layout */
+.success-message-text {
+  color: var(--success); 
+  font-size: 13px; 
+  margin-bottom: 14px;
+}
+
+/* Schedule interview panel constraints */
+.schedule-card-constrained {
+  max-width: 520px;
+}
+
+/* Informative team onboarding disclaimer text */
+.team-disclaimer-banner {
+  color: var(--muted); 
+  font-size: 13px;
+  margin-bottom: 20px;
 }

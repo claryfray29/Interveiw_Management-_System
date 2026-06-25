@@ -62,23 +62,27 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(ellipse at 60% 40%, rgba(59,130,246,0.08) 0%,transparent 65%),var(--bg)' }}>
-      <div className="card" style={{ width: 400 }}>
-        <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 6 }}>
+    <div className="auth-wrapper">
+      <div className="card auth-card">
+        <div className="auth-brand">
           Interview<span style={{ color: 'var(--accent)' }}>Manager</span>
         </div>
-        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 28 }}>Sign in to your account</p>
+        <p className="auth-subtitle">Sign in to your account</p>
 
         {/* Role picker */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, background: 'var(--bg)', padding: 4, borderRadius: 6, marginBottom: 24 }}>
+        <div className="role-picker-grid">
           {ROLES.map(r => (
-            <button key={r.key} onClick={() => setRole(r.key)} style={{
-              padding: '7px 2px', fontSize: 11, fontWeight: 500,
-              border: 'none', borderRadius: 4, cursor: 'pointer',
-              fontFamily: 'Inter,sans-serif',
-              background: role === r.key ? 'var(--accent)' : 'transparent',
-              color: role === r.key ? '#fff' : 'var(--muted)',
-            }}>{r.label}</button>
+            <button 
+              key={r.key} 
+              onClick={() => setRole(r.key)} 
+              className="role-picker-btn"
+              style={{
+                background: role === r.key ? 'var(--accent)' : 'transparent',
+                color: role === r.key ? '#fff' : 'var(--muted)',
+              }}
+            >
+              {r.label}
+            </button>
           ))}
         </div>
 
@@ -94,11 +98,11 @@ export default function Login() {
         </div>
 
         <button className="btn btn-primary btn-block" onClick={handleLogin} disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign In'}
+          {loading ? 'Signing in' : 'Sign In'}
         </button>
 
         <div className="divider" />
-        <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--muted)' }}>
+        <div className="auth-footer-prompt">
           New here?{' '}
           <button className="btn btn-ghost btn-sm" onClick={() => setShowReg(true)}>Create candidate account</button>
         </div>

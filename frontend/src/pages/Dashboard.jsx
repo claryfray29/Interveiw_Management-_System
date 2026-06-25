@@ -21,8 +21,8 @@ export default function Dashboard() {
   const hints = {
     candidate:    'Browse available jobs and track your applications from the sidebar.',
     interviewer:  'Check your upcoming interviews and post feedback after sessions.',
-    company_admin:'Manage applications, job listings, and your team from the sidebar.',
-    global_admin: 'Add and manage companies from the sidebar.',
+    company_admin: 'Manage applications, job listings, and your team from the sidebar.',
+    global_admin:  'Add and manage companies from the sidebar.',
   };
 
   return (
@@ -30,23 +30,23 @@ export default function Dashboard() {
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p>Welcome back, {user?.name} 👋</p>
+          <p>Welcome back, {user?.name}</p>
         </div>
       </div>
 
       <div className="stats-grid">
         {role === 'candidate' && <>
-          <div className="stat-card"><div className="icon">💼</div><div className="label">Available Jobs</div><div className="value">{stats.jobs ?? '…'}</div></div>
-          <div className="stat-card"><div className="icon">📋</div><div className="label">My Applications</div><div className="value">{stats.apps ?? '…'}</div></div>
+          <div className="stat-card"><div className="label">Available Jobs</div><div className="value">{stats.jobs ?? '…'}</div></div>
+          <div className="stat-card"><div className="label">My Applications</div><div className="value">{stats.apps ?? '…'}</div></div>
         </>}
         {role === 'interviewer' &&
-          <div className="stat-card"><div className="icon">🗓</div><div className="label">Upcoming Interviews</div><div className="value">{stats.interviews ?? '…'}</div></div>
+          <div className="stat-card"><div className="label">Upcoming Interviews</div><div className="value">{stats.interviews ?? '…'}</div></div>
         }
         {role === 'company_admin' &&
-          <div className="stat-card"><div className="icon">📋</div><div className="label">Applications</div><div className="value">{stats.apps ?? '…'}</div></div>
+          <div className="stat-card"><div className="label">Applications</div><div className="value">{stats.apps ?? '…'}</div></div>
         }
         {role === 'global_admin' &&
-          <div className="stat-card"><div className="icon">🏢</div><div className="label">Platform</div><div className="value">Admin</div></div>
+          <div className="stat-card"><div className="label">Platform</div><div className="value">Admin</div></div>
         }
       </div>
 
