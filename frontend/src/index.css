@@ -348,7 +348,7 @@ select.inline { background: var(--bg); border: 1px solid var(--border); color: v
   gap: 4px; 
   background: var(--bg); 
   padding: 4px; 
-  borderRadius: 6px; 
+  border-radius: 6px; 
   margin-bottom: 24px;
 }
 
