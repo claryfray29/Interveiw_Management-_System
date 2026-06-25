@@ -78,6 +78,7 @@ class InterviewerBase(BaseModel):
     email: str
     password: str
     role_id: int
+
 class InterviewerCreate(InterviewerBase):
     pass
 
@@ -98,7 +99,6 @@ class CandidateBase(BaseModel):
     resume: Optional[str] = None
 
 class CandidateCreate(CandidateBase):
-    #pass
     interested_roles: list[int] = []
     skills: Optional[str] = None
 
@@ -123,6 +123,7 @@ class JobCreate(JobBase):
 class Job(JobBase):
     id: int
     company_id: int
+    skills_required: Optional[str] = None  # was missing from JobBase, needed by Jobs.jsx
 
     class Config:
         from_attributes = True
@@ -132,7 +133,7 @@ class Job(JobBase):
 class ApplicationBase(BaseModel):
     job_id: int
     resume: str
-    
+
 class ApplicationCreate(ApplicationBase):
     pass
 
@@ -140,6 +141,7 @@ class Application(ApplicationBase):
     id: int
     candidate_id: int
     company_id: int
+    status: str = "applied"  # was missing — caused badge to not render and status column to be blank
 
     class Config:
         from_attributes = True
@@ -151,9 +153,6 @@ class InterviewBase(BaseModel):
     interviewer_id: int
     scheduled_start: datetime
     scheduled_end: datetime
-    # candidate_id: int
-    # company_id: int
-    # feedback: str = None
     status: str = "scheduled"
 
 class InterviewCreate(InterviewBase):
@@ -164,7 +163,6 @@ class Interview(InterviewBase):
 
     class Config:
         from_attributes = True
-
 
 class CompanyWithAdminCreate(BaseModel):
     company_name: str

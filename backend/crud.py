@@ -269,7 +269,7 @@ def view_available_jobs(db: Session, candidate_id: int = None):
 #candidate specific
 def view_job_status(db: Session, candidate_id: int):
     applications = db.query(models.Application).filter(models.Application.candidate_id == candidate_id).all()
-    return [{"job_title": app.job.title, "status": app.status} for app in applications]
+    return [{"id": app.id, "job_title": app.job.title, "status": app.status} for app in applications]
 
 
 #interviewer to check upcoming interviews

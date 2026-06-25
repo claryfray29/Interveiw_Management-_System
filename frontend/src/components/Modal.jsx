@@ -1,7 +1,7 @@
 import React from 'react';
 
-export default function Modal({ isOpen, onClose, title, children, footerButtons }) {
-  if (!isOpen) return null;
+export default function Modal({ open, onClose, title, children, footer }) {
+  if (!open) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -10,14 +10,14 @@ export default function Modal({ isOpen, onClose, title, children, footerButtons 
           <span className="modal-title">{title}</span>
           <button className="modal-close-btn" onClick={onClose}>&times;</button>
         </div>
-        
+
         <div className="modal-body">
           {children}
         </div>
 
-        {footerButtons && (
+        {footer && (
           <div className="modal-footer">
-            {footerButtons}
+            {footer}
           </div>
         )}
       </div>

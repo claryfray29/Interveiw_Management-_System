@@ -4,25 +4,26 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const NAV_MENU = {
   candidate: [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: 'My Profile', to: '/profile' },
-    { label: 'Jobs', to: '/jobs' },
-    { label: 'My Applications', to: '/applications' }
+    { label: 'Dashboard',        to: '/dashboard' },
+    { label: 'My Profile',       to: '/profile' },
+    { label: 'Jobs',             to: '/jobs' },
+    { label: 'My Applications',  to: '/my-applications' },
   ],
   interviewer: [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: 'Interviews', to: '/interviews' }
+    { label: 'Dashboard',   to: '/dashboard' },
+    { label: 'Interviews',  to: '/interviews' },
   ],
   company_admin: [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: 'Manage Team', to: '/team' },
-    { label: 'Jobs Portal', to: '/manage-jobs' },
-    { label: 'Interviews Master', to: '/manage-interviews' }
+    { label: 'Dashboard',     to: '/dashboard' },
+    { label: 'Applications',  to: '/company/applications' },
+    { label: 'Jobs',          to: '/company/jobs' },
+    { label: 'Team',          to: '/company/team' },
+    { label: 'Schedule',      to: '/company/schedule' },
   ],
   global_admin: [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: 'Companies', to: '/companies' }
-  ]
+    { label: 'Dashboard',  to: '/dashboard' },
+    { label: 'Companies',  to: '/companies' },
+  ],
 };
 
 export default function Sidebar() {
@@ -50,8 +51,9 @@ export default function Sidebar() {
               onClick={() => navigate(item.to)}
               className="sidebar-link"
               style={{
-                backgroundColor: isActive ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
-                color: isActive ? 'var(--accent)' : 'var(--text-muted)'
+                backgroundColor: isActive ? 'var(--accent-glow)' : 'transparent',
+                color: isActive ? 'var(--accent)' : 'var(--muted)',
+                fontWeight: isActive ? 600 : 500,
               }}
             >
               {item.label}

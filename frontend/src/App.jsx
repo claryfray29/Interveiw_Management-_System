@@ -21,17 +21,17 @@ function Layout() {
       <Sidebar />
       <div className="main-content">
         <Routes>
-          <Route path="/dashboard"            element={<Dashboard />} />
-          <Route path="/profile"              element={<Profile />} />
-          <Route path="/jobs"                 element={<Jobs />} />
-          <Route path="/my-applications"      element={<MyApplications />} />
-          <Route path="/interviews"           element={<Interviews />} />
-          <Route path="/company/applications" element={<CompanyApplications />} />
-          <Route path="/company/jobs"         element={<CompanyJobs />} />
-          <Route path="/company/team"         element={<Team />} />
-          <Route path="/company/schedule"     element={<Schedule />} />
-          <Route path="/companies"            element={<Companies />} />
-          <Route path="*"                     element={<Navigate to="/dashboard" />} />
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard"            element={<Dashboard />} />
+          <Route path="profile"              element={<Profile />} />
+          <Route path="jobs"                 element={<Jobs />} />
+          <Route path="my-applications"      element={<MyApplications />} />
+          <Route path="interviews"           element={<Interviews />} />
+          <Route path="company/applications" element={<CompanyApplications />} />
+          <Route path="company/jobs"         element={<CompanyJobs />} />
+          <Route path="company/team"         element={<Team />} />
+          <Route path="company/schedule"     element={<Schedule />} />
+          <Route path="companies"            element={<Companies />} />
         </Routes>
       </div>
     </div>
@@ -42,8 +42,8 @@ export default function App() {
   const { token } = useAuth();
   return (
     <Routes>
-      <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route path="/*"     element={token ? <Layout /> : <Navigate to="/login" />} />
+      <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/*"     element={token ? <Layout /> : <Navigate to="/login" replace />} />
     </Routes>
   );
 }

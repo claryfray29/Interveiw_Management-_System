@@ -20,16 +20,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/login",
     scopes={
-        "global_admin": "Global administrator with full system access",
+        "global_admin":  "Global administrator with full system access",
         "company_admin": "Company administrator with access to manage their company's resources",
-        "interviewer": "Interviewer with access to manage their interviews and view assigned candidates",
-        "candidate": "Candidate with access to view and manage their applications and interviews"
+        "interviewer":   "Interviewer with access to manage their interviews and view assigned candidates",
+        "candidate":     "Candidate with access to view and manage their applications and interviews",
     }
 )
 
+# Includes role + name so the frontend doesn't have to trust the UI role picker
 class Token(BaseModel):
     access_token: str
     token_type: str
+    role: str
+    name: str
 
 class TokenData(BaseModel):
     email: str | None = None
@@ -63,7 +66,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 def verify_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithm=[ALGORITHM])
+        # Fixed: was algorithm=[ALGORITHM] (wrong — positional list arg doesn't exist)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
         raise Exception("Token has expired")
@@ -79,12 +83,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        role: str = payload.get("role")
-        if email is None:
+        role: str  = payload.get("role")
+        if email is None or role is None:
             raise credentials_exception
         token_data = TokenData(email=email, role=role)
     except InvalidTokenError:
         raise credentials_exception
+
     user = get_user(db, role=token_data.role, email=token_data.email)
     if user is None:
         raise credentials_exception
@@ -95,7 +100,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     return user
 
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     role = form_data.scopes[0] if form_data.scopes else "candidate"
     user = authenticate_user(db, role, form_data.username, form_data.password)
     if not user:
@@ -104,6 +112,13 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": form_data.username, "role": role}, expires_delta=access_token_expires)
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_access_token(
+        data={"sub": form_data.username, "role": role},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": role,
+        "name": getattr(user, "name", form_data.username),
+    }
