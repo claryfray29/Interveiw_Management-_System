@@ -84,6 +84,9 @@ def create_company_user(db: Session, user_data: schemas.CompanyUserCreate, compa
     db.refresh(db_user)
     return {"detail": f"{user_data.account_type.replace('_', ' ').title()} added successfully", "user": user_data.email}
 
+def get_all_companies(db: Session):
+    return db.query(models.Company).all()
+
 # #company admin specific
 # def add_company_admin(db: Session, admin: schemas.CompanyAdminCreate):
 #     hashed_password = hashlib.sha256(admin.password.encode()).hexdigest()

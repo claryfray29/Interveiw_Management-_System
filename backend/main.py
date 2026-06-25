@@ -56,6 +56,13 @@ def add_company(payload: schemas.CompanyWithAdminCreate, current_user: schemas.G
     
     return crud.add_company(db, payload)
 
+# get all companies from mysql (global admin only)
+@app.get("/companies/")
+def get_companies(current_user: schemas.GlobalAdmin = Depends(get_current_user), db: Session = Depends(get_db)):
+    if getattr(current_user, "system_role", None) != "global_admin":
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+    return crud.get_all_companies(db)
+
 #delete company (global admin only)
 @app.delete("/companies/{company_id}")
 def delete_company(company_id: int, current_user: schemas.GlobalAdmin = Depends(get_current_user), db: Session = Depends(get_db)):

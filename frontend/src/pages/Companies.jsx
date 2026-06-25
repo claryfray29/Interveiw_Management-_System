@@ -1,23 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth, apiFetch } from '../context/AuthContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 export default function Companies() {
   const { token } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const [added,     setAdded]     = useState([]);
+  
+  // 1. Change this to track the full list of companies fetched from MySQL
+  const [companies, setCompanies] = useState([]);
   const [form, setForm] = useState({ company_name: '', super_admin_name: '', super_admin_email: '', super_admin_password: '' });
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  // 2. Fetch the existing company rows from the backend the moment the page mounts
+  const fetchCompanies = async () => {
+    try {
+      const data = await apiFetch('/companies/', token);
+      if (Array.isArray(data)) {
+        setCompanies(data);
+      }
+    } catch (e) {
+      console.error("Failed to load companies:", e.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, [token]);
 
   async function addCompany() {
     if (!form.company_name || !form.super_admin_name || !form.super_admin_email || !form.super_admin_password) { alert('Fill all fields'); return; }
     try {
       await apiFetch('/companies/', token, { method: 'POST', body: JSON.stringify(form) });
-      setAdded(a => [...a, form.company_name]);
       alert(`Company "${form.company_name}" added!`);
       setShowModal(false);
       setForm({ company_name: '', super_admin_name: '', super_admin_email: '', super_admin_password: '' });
+      
+      // 3. Re-fetch from the database right after adding to pull the newly persistent data row
+      fetchCompanies();
     } catch (e) { alert(e.message); }
   }
 
@@ -28,15 +48,23 @@ export default function Companies() {
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Company</button>
       </div>
 
-      {added.length === 0 ? (
+      {/* 4. Render the database records instead of the old transient session array */}
+      {companies.length === 0 ? (
         <div className="empty">
-          <div className="title">No companies added this session</div>
+          <div className="title">No companies found in database</div>
         </div>
       ) : (
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Company</th></tr></thead>
-            <tbody>{added.map((c, i) => <tr key={i}><td>{c}</td></tr>)}</tbody>
+            <thead><tr><th>Company Name</th></tr></thead>
+            <tbody>
+              {companies.map((c, i) => (
+                <tr key={c.id || i}>
+                  {/* Access the name field returned from your backend schemas/models */}
+                  <td>{c.name || c.company_name}</td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )}

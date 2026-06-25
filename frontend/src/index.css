@@ -3,15 +3,19 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:         #0D1117;
-  --surface:    #161B27;
-  --surface2:   #1E2738;
-  --border:     #272F42;
-  --accent:     #7C6AF7;
-  --accent-dim: #5B4FD4;
-  --accent-glow:rgba(124,106,247,0.18);
-  --text:       #DDE3F0;
-  --muted:      #6B7A99;
+  /* Hex codes mapped straight from image_311f89.png */
+  --bg:         #222731;
+  --surface:    #303841;
+  --surface2:   #3B444F;
+  --border:     #434E5A;
+  
+  --accent:     #FF5722;
+  --accent-dim: #E64A19;
+  --accent-glow: rgba(255, 87, 34, 0.2);
+  
+  --text:       #F5F5F5;
+  --muted:      #76ABAE;
+  
   --danger:     #F4617A;
   --success:    #34D399;
 }
@@ -84,10 +88,9 @@ body {
   margin-bottom: 28px;
 }
 .page-header h1 {
-  font-size: 24px; font-weight: 700; letter-spacing: -0.4px;
-  background: linear-gradient(120deg, var(--text) 60%, var(--accent));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: none !important;
+  -webkit-text-fill-color: var(--text) !important;
+  color: var(--text) !important;
 }
 .page-header p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
@@ -107,7 +110,9 @@ th {
 }
 td { padding: 13px 18px; font-size: 13.5px; border-bottom: 1px solid rgba(39,47,66,0.6); }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(124,106,247,0.04); }
+tr:hover td {
+  background: var(--surface2) !important;
+}
 
 .table-link {
   color: var(--accent);
@@ -244,7 +249,8 @@ select.inline {
   display: inline-block; font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.05em;
   padding: 2px 7px; border-radius: 4px;
-  background: rgba(124,106,247,0.12); color: var(--accent);
+  background: rgba(118, 171, 174, 0.15);
+  color: var(--muted);
   font-family: 'DM Mono', monospace;
 }
 
@@ -260,6 +266,9 @@ select.inline {
   font-size: 13px; font-weight: 500; cursor: pointer;
   text-align: left;
   transition: background-color 0.12s ease, color 0.12s ease;
+  background-color: var(--accent-glow) !important;
+  color: var(--accent) !important;
+  font-weight: 600;
 }
 
 .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
